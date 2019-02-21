@@ -18,9 +18,11 @@ def SSD_300(
     aspect_ratios_per_layer= [[2.0],
                             [2.0, 3.0],
                             [2.0, 3.0],
+                            [2.0, 3.0],
+                            [2.0, 3.0],
                             [2.0, 3.0]],
     variances = [0.1, 0.1, 0.2, 0.2],
-    scales = [40, 100, 168, 222, 330],
+    scales = [30, 60, 114, 168, 222, 276, 330],
     # scales = [100, 168, 222, 276, 330],
     clip_boxes = True):
 
@@ -38,13 +40,12 @@ def SSD_300(
             variances (list, optional): A list of 4 floats >0. The anchor box offset for each coordinate will be divided by
                 its respective variance value.
     '''
-    
-    n_predictor_layers = 4 # The number of predictor conv layers in the network is 6 for the original SSD300.
+    n_predictor_layers = 6 # The number of predictor conv layers in the network is 6 for the original SSD300.
 
     if aspect_ratios_per_layer:
         if len(aspect_ratios_per_layer) != n_predictor_layers:
             raise ValueError("It must be either aspect_ratios_per_layer is None or len(aspect_ratios_per_layer) == {}, but len(aspect_ratios_per_layer) == {}.".format(n_predictor_layers, len(aspect_ratios_per_layer)))
-
+        
 
     if scales:
         if len(scales) != n_predictor_layers+1:
@@ -62,31 +63,31 @@ def SSD_300(
     net['conv1_2'] = Convolution2D(32, kernel_size=3, strides=2, activation='relu', padding='valid', name='conv1_2')(net['conv1_1'])
     
     # Block 2
-    net['res2_1'] = Residual_Block(16, net['conv1_2'])
+    net['res2_1'] = Residual_Block(16, net['conv1_2'], name='res2_1')
     net['conv3_1'] = Convolution2D(64, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv3_1')(net['res2_1'])
 
     # Block 3
-    net['res4_1'] = Residual_Block(32, net['conv3_1'])
-    net['res4_2'] = Residual_Block(32, net['res4_1'])
+    net['res4_1'] = Residual_Block(32, net['conv3_1'], name='res4_1')
+    net['res4_2'] = Residual_Block(32, net['res4_1'], name='res4_2')
     net['conv4_3'] = Convolution2D(128, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv4_3')(net['res4_2'])
     
     # Block 4
-    net['res5_1'] = Residual_Block(64, net['conv4_3'])
-    net['res5_2'] = Residual_Block(64, net['res5_1'])
-    net['res5_3'] = Residual_Block(64, net['res5_2'])
-    net['res5_4'] = Residual_Block(64, net['res5_3'])
+    net['res5_1'] = Residual_Block(64, net['conv4_3'], name='res5_1')
+    net['res5_2'] = Residual_Block(64, net['res5_1'], name='res5_2')
+    net['res5_3'] = Residual_Block(64, net['res5_2'], name='res5_3') 
+    net['res5_4'] = Residual_Block(64, net['res5_3'], name='res5_4')
     net['conv5_5'] = Convolution2D(256, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv5_5')(net['res5_4'])
 
     # Block 5
-    net['res6_1'] = Residual_Block(128, net['conv5_5'])
-    net['res6_2'] = Residual_Block(128, net['res6_1'])
-    net['res6_3'] = Residual_Block(128, net['res6_2'])
-    net['res6_4'] = Residual_Block(128, net['res6_3'])
+    net['res6_1'] = Residual_Block(128, net['conv5_5'], name='res6_1')
+    net['res6_2'] = Residual_Block(128, net['res6_1'], name='res6_2')
+    net['res6_3'] = Residual_Block(128, net['res6_2'], name='res6_3') # prediction from 6_3 layer 26
+    net['res6_4'] = Residual_Block(128, net['res6_3'], name='res6_4')
     net['conv6_5'] = Convolution2D(512, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv6_5')(net['res6_4'])
 
     # Block 6
-    net['res7_1'] = Residual_Block(256, net['conv6_5'])
-    net['res7_2'] = Residual_Block(256, net['res7_1'])
+    net['res7_1'] = Residual_Block(256, net['conv6_5'], name='res7_1')
+    net['res7_2'] = Residual_Block(256, net['res7_1'], name='res7_2') # prediction from 7_2 layer 34
     
     # Last pool
     net['pool7_3'] = GlobalAveragePooling2D(name='pool7_3')(net['res7_2'])
@@ -111,6 +112,16 @@ def SSD_300(
     net['conv5_5_mbox_conf_flat'] = Flatten()(net['conv5_5_mbox_conf'])
 
     net['conv5_5_mbox_priorbox'] = PriorBox(image_size, min_size=scales[1], max_size=scales[2], aspect_ratios=aspect_ratios_per_layer[1], variances=variances)(net['conv5_5'])
+
+    # Prediction from conv6_3
+    num_priors = 6
+    net['conv6_3_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res6_3'])
+    net['conv6_3_mbox_loc_flat'] = Flatten()(net['conv6_3_mbox_loc'])
+    
+    net['conv6_3_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res6_3'])
+    net['conv6_3_mbox_conf_flat'] = Flatten()(net['conv6_3_mbox_conf'])
+
+    net['conv6_3_mbox_priorbox'] = PriorBox(image_size, min_size=scales[2], max_size=scales[3], aspect_ratios=aspect_ratios_per_layer[2], variances=variances)(net['res6_3'])
     
     # Prediction from conv6_5
     num_priors = 6
@@ -120,7 +131,17 @@ def SSD_300(
     net['conv6_5_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['conv6_5'])
     net['conv6_5_mbox_conf_flat'] = Flatten()(net['conv6_5_mbox_conf'])
 
-    net['conv6_5_mbox_priorbox'] = PriorBox(image_size, min_size=scales[2], max_size=scales[3], aspect_ratios=aspect_ratios_per_layer[2], variances=variances)(net['conv6_5'])
+    net['conv6_5_mbox_priorbox'] = PriorBox(image_size, min_size=scales[3], max_size=scales[4], aspect_ratios=aspect_ratios_per_layer[3], variances=variances)(net['conv6_5'])
+
+    # Prediction from conv7_2
+    num_priors = 6
+    net['conv7_2_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res7_2'])
+    net['conv7_2_mbox_loc_flat'] = Flatten()(net['conv7_2_mbox_loc'])
+    
+    net['conv7_2_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res7_2'])
+    net['conv7_2_mbox_conf_flat'] = Flatten()(net['conv7_2_mbox_conf'])
+
+    net['conv7_2_mbox_priorbox'] = PriorBox(image_size, min_size=scales[4], max_size=scales[5], aspect_ratios=aspect_ratios_per_layer[4], variances=variances)(net['res7_2'])
     
     # Prediction from pool7_3
     num_priors = 6
@@ -134,7 +155,7 @@ def SSD_300(
         target_shape = (512, 1, 1)
     
     net['pool7_3_reshaped'] = Reshape(target_shape)(net['pool7_3'])
-    net['pool7_3_mbox_priorbox'] = PriorBox(image_size, min_size=scales[3], max_size=scales[4], aspect_ratios=aspect_ratios_per_layer[3], variances=variances)(net['pool7_3_reshaped'])
+    net['pool7_3_mbox_priorbox'] = PriorBox(image_size, min_size=scales[5], max_size=scales[6], aspect_ratios=aspect_ratios_per_layer[5], variances=variances)(net['pool7_3_reshaped'])
    
     # Combine predictions
     
@@ -142,7 +163,9 @@ def SSD_300(
     # Output shape of the localization layers: `(batch, height, width, n_boxes * 4)`
     net['mbox_loc'] = concatenate([net['conv4_3_norm_mbox_loc_flat'],
                             net['conv5_5_mbox_loc_flat'],
+                            net['conv6_3_mbox_loc_flat'],
                             net['conv6_5_mbox_loc_flat'],
+                            net['conv7_2_mbox_loc_flat'],
                             net['pool7_3_mbox_loc_flat']
                             ], axis=1)
     
@@ -150,14 +173,18 @@ def SSD_300(
     # Output shape of the confidence layers: `(batch, height, width, n_boxes * n_classes)`
     net['mbox_conf'] = concatenate([net['conv4_3_norm_mbox_conf_flat'],
                             net['conv5_5_mbox_conf_flat'],
+                            net['conv6_3_mbox_conf_flat'],
                             net['conv6_5_mbox_conf_flat'],
+                            net['conv7_2_mbox_conf_flat'],
                             net['pool7_3_mbox_conf_flat']
                             ], axis=1)
     
     # Output shape of anchors: `(batch, height, width, n_boxes, 8)`
     net['mbox_prior'] = concatenate([net['conv4_3_norm_mbox_priorbox'],
                             net['conv5_5_mbox_priorbox'],
+                            net['conv6_3_mbox_priorbox'],
                             net['conv6_5_mbox_priorbox'],
+                            net['conv7_2_mbox_priorbox'],
                             net['pool7_3_mbox_priorbox']
                             ], axis=1)
 

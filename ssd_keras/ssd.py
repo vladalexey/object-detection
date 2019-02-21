@@ -24,7 +24,7 @@ NUM_CLASSES = 17 + 1   # classes + 1 for background (e.g. for PASCAL07 it is 20 
 BS = 64
 NUM_EPOCH = 200
 input_shape = (300, 300, 3)
-BASE_LR = 5e-4
+BASE_LR = 3e-4
 
 image_dir_VOC2012 = 'data/VOCdevkit/VOC2012/JPEGImages'
 annotation_dir_VOC2012 = 'data/VOCdevkit/VOC2012/Annotations'
@@ -43,7 +43,7 @@ NUM_VAL = len(val_keys)
 print('[INFO] Training images: {}'.format(NUM_TRAIN))
 print('[INFO] Validation images: {}'.format(NUM_VAL))
 
-train_gen = DataGen(gt, bbox_util, BS, image_dir_VOC2012, train_keys, val_keys, (input_shape[0], input_shape[1]))
+# train_gen = DataGen(gt, bbox_util, BS, image_dir_VOC2012, train_keys, val_keys, (input_shape[0], input_shape[1]))
  
 model = SSD_300(input_shape, num_classes=NUM_CLASSES)
 model.summary()
@@ -54,7 +54,7 @@ def schedule(epoch, decay=0.9):
 filepath = "saved_model-{epoch:02d}-{val_loss:.4f}.hdf5"
 callbacks = [ModelCheckpoint(filepath, monitor='val_loss', save_best_only=True, verbose=1, save_weights_only=True),
             # LearningRateScheduler(schedule, verbose=1),
-            EarlyStopping(monitor='val_loss', patience=4, verbose=1)]
+            EarlyStopping(monitor='val_loss', patience=5, verbose=1)]
 optimizer = Adam(lr=BASE_LR)
 
 model.compile(optimizer, loss=MultiBoxLoss(NUM_CLASSES, neg_pos_ratio=2.0).compute_loss, metrics=['accuracy'])

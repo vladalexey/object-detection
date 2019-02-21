@@ -198,7 +198,7 @@ class PriorBox(Layer):
         return prior_boxes_tensor
 
 # def Residual_Block(num_filters_inp, num_filters_out, prev_layer):
-def Residual_Block(num_filters_out, prev_layer):
+def Residual_Block(num_filters_out, prev_layer, name):
     '''
     A customizable residual unit with convolutional and shortcut blocks
     Args:
@@ -220,5 +220,5 @@ def Residual_Block(num_filters_out, prev_layer):
     # if num_filters_inp != num_filters_out:
     #     prev_layer = Convolution2D(num_filters_out, kernel_size=1)(prev_layer)
     
-    return add([out, prev_layer])
+    return add([out, prev_layer], name=name)
     
