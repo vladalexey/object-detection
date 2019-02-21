@@ -43,7 +43,7 @@ NUM_VAL = len(val_keys)
 print('[INFO] Training images: {}'.format(NUM_TRAIN))
 print('[INFO] Validation images: {}'.format(NUM_VAL))
 
-# train_gen = DataGen(gt, bbox_util, BS, image_dir_VOC2012, train_keys, val_keys, (input_shape[0], input_shape[1]))
+train_gen = DataGen(gt, bbox_util, BS, image_dir_VOC2012, train_keys, val_keys, (input_shape[0], input_shape[1]))
  
 model = SSD_300(input_shape, num_classes=NUM_CLASSES)
 model.summary()
