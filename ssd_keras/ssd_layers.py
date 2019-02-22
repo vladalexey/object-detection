@@ -210,12 +210,13 @@ def Residual_Block(num_filters_out, prev_layer, name):
     out = prev_layer
     
     out = BatchNormalization(axis=1)(out)
-    out = Convolution2D(num_filters_out, kernel_size=1, padding='same')(out)
     out = Activation('relu')(out)
+    out = Convolution2D(num_filters_out, kernel_size=1, padding='same')(out)
+    
 
     out = BatchNormalization(axis=1)(out)
-    out = Convolution2D(num_filters_out * 2, kernel_size=3, padding='same')(out)
     out = Activation('relu')(out)
+    out = Convolution2D(num_filters_out * 2, kernel_size=3, padding='same')(out)
     
     # if num_filters_inp != num_filters_out:
     #     prev_layer = Convolution2D(num_filters_out, kernel_size=1)(prev_layer)

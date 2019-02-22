@@ -59,35 +59,35 @@ def SSD_300(
     # Block 1
     input_tensor = Input(shape=(img_height, img_width, img_channels))
     net['input'] = input_tensor
-    net['conv1_1'] = Convolution2D(16, kernel_size=3, activation='relu', padding='same')(net['input'])
-    net['conv1_2'] = Convolution2D(32, kernel_size=3, strides=2, activation='relu', padding='valid', name='conv1_2')(net['conv1_1'])
+    net['conv1_1'] = Convolution2D(32, kernel_size=3, activation='relu', padding='same')(net['input'])
+    net['conv1_2'] = Convolution2D(64, kernel_size=3, strides=2, activation='relu', padding='valid', name='conv1_2')(net['conv1_1'])
     
     # Block 2
-    net['res2_1'] = Residual_Block(16, net['conv1_2'], name='res2_1')
-    net['conv3_1'] = Convolution2D(64, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv3_1')(net['res2_1'])
+    net['res2_1'] = Residual_Block(32, net['conv1_2'], name='res2_1')
+    net['conv3_1'] = Convolution2D(128, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv3_1')(net['res2_1'])
 
     # Block 3
-    net['res4_1'] = Residual_Block(32, net['conv3_1'], name='res4_1')
-    net['res4_2'] = Residual_Block(32, net['res4_1'], name='res4_2')
-    net['conv4_3'] = Convolution2D(128, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv4_3')(net['res4_2'])
+    net['res4_1'] = Residual_Block(64, net['conv3_1'], name='res4_1')
+    net['res4_2'] = Residual_Block(64, net['res4_1'], name='res4_2')
+    net['conv4_3'] = Convolution2D(256, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv4_3')(net['res4_2'])
     
     # Block 4
-    net['res5_1'] = Residual_Block(64, net['conv4_3'], name='res5_1')
-    net['res5_2'] = Residual_Block(64, net['res5_1'], name='res5_2')
-    net['res5_3'] = Residual_Block(64, net['res5_2'], name='res5_3') 
-    net['res5_4'] = Residual_Block(64, net['res5_3'], name='res5_4')
-    net['conv5_5'] = Convolution2D(256, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv5_5')(net['res5_4'])
+    net['res5_1'] = Residual_Block(128, net['conv4_3'], name='res5_1')
+    net['res5_2'] = Residual_Block(128, net['res5_1'], name='res5_2')
+    net['res5_3'] = Residual_Block(128, net['res5_2'], name='res5_3') 
+    net['res5_4'] = Residual_Block(128, net['res5_3'], name='res5_4')
+    net['conv5_5'] = Convolution2D(512, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv5_5')(net['res5_4'])
 
     # Block 5
-    net['res6_1'] = Residual_Block(128, net['conv5_5'], name='res6_1')
-    net['res6_2'] = Residual_Block(128, net['res6_1'], name='res6_2')
-    net['res6_3'] = Residual_Block(128, net['res6_2'], name='res6_3') # prediction from 6_3 layer 26
-    net['res6_4'] = Residual_Block(128, net['res6_3'], name='res6_4')
-    net['conv6_5'] = Convolution2D(512, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv6_5')(net['res6_4'])
+    net['res6_1'] = Residual_Block(256, net['conv5_5'], name='res6_1')
+    net['res6_2'] = Residual_Block(256, net['res6_1'], name='res6_2')
+    net['res6_3'] = Residual_Block(256, net['res6_2'], name='res6_3') # prediction from 6_3 layer 26
+    net['res6_4'] = Residual_Block(256, net['res6_3'], name='res6_4')
+    net['conv6_5'] = Convolution2D(1024, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv6_5')(net['res6_4'])
 
     # Block 6
-    net['res7_1'] = Residual_Block(256, net['conv6_5'], name='res7_1')
-    net['res7_2'] = Residual_Block(256, net['res7_1'], name='res7_2') # prediction from 7_2 layer 34
+    net['res7_1'] = Residual_Block(512, net['conv6_5'], name='res7_1')
+    net['res7_2'] = Residual_Block(512, net['res7_1'], name='res7_2') # prediction from 7_2 layer 34
     
     # Last pool
     net['pool7_3'] = GlobalAveragePooling2D(name='pool7_3')(net['res7_2'])
@@ -150,9 +150,9 @@ def SSD_300(
     net['pool7_3_mbox_conf_flat'] = Dense(num_priors * num_classes)(net['pool7_3'])
 
     if K.image_dim_ordering() == 'tf':
-        target_shape = (1, 1, 512)
+        target_shape = (1, 1, 1024)
     else:
-        target_shape = (512, 1, 1)
+        target_shape = (1024, 1, 1)
     
     net['pool7_3_reshaped'] = Reshape(target_shape)(net['pool7_3'])
     net['pool7_3_mbox_priorbox'] = PriorBox(image_size, min_size=scales[5], max_size=scales[6], aspect_ratios=aspect_ratios_per_layer[5], variances=variances)(net['pool7_3_reshaped'])
