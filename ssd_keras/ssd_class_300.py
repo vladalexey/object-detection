@@ -125,13 +125,13 @@ def SSD_300(
 
     # Prediction from conv6_9
     num_priors = 6
-    net['conv6_9_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res6_3'])
+    net['conv6_9_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['conv6_9'])
     net['conv6_9_mbox_loc_flat'] = Flatten()(net['conv6_9_mbox_loc'])
     
-    net['conv6_9_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res6_3'])
+    net['conv6_9_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['conv6_9'])
     net['conv6_9_mbox_conf_flat'] = Flatten()(net['conv6_9_mbox_conf'])
 
-    net['conv6_9_mbox_priorbox'] = PriorBox(image_size, min_size=scales[2], max_size=scales[3], aspect_ratios=aspect_ratios_per_layer[2], variances=variances)(net['res6_3'])
+    net['conv6_9_mbox_priorbox'] = PriorBox(image_size, min_size=scales[2], max_size=scales[3], aspect_ratios=aspect_ratios_per_layer[2], variances=variances)(net['conv6_9'])
     
     # Prediction from res7_2
     num_priors = 6
