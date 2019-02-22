@@ -76,116 +76,126 @@ def SSD_300(
     net['res5_2'] = Residual_Block(128, net['res5_1'], name='res5_2')
     net['res5_3'] = Residual_Block(128, net['res5_2'], name='res5_3') 
     net['res5_4'] = Residual_Block(128, net['res5_3'], name='res5_4')
-    net['conv5_5'] = Convolution2D(512, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv5_5')(net['res5_4'])
+    net['res5_5'] = Residual_Block(128, net['res5_4'], name='res5_5')
+    net['res5_6'] = Residual_Block(128, net['res5_5'], name='res5_6')
+    net['res5_7'] = Residual_Block(128, net['res5_6'], name='res5_7') 
+    net['res5_8'] = Residual_Block(128, net['res5_7'], name='res5_8')
+    net['conv5_9'] = Convolution2D(512, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv5_9')(net['res5_8'])
 
     # Block 5
-    net['res6_1'] = Residual_Block(256, net['conv5_5'], name='res6_1')
+    net['res6_1'] = Residual_Block(256, net['conv5_9'], name='res6_1')
     net['res6_2'] = Residual_Block(256, net['res6_1'], name='res6_2')
-    net['res6_3'] = Residual_Block(256, net['res6_2'], name='res6_3') # prediction from 6_3 layer 26
-    net['res6_4'] = Residual_Block(256, net['res6_3'], name='res6_4')
-    net['conv6_5'] = Convolution2D(1024, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv6_5')(net['res6_4'])
+    net['res6_3'] = Residual_Block(256, net['res6_2'], name='res6_3') 
+    net['res6_4'] = Residual_Block(256, net['res6_3'], name='res6_4') 
+    net['res6_5'] = Residual_Block(256, net['res6_4'], name='res6_5') # prediction from 6_5 layer 26
+    net['res6_6'] = Residual_Block(256, net['res6_1'], name='res6_6') 
+    net['res6_7'] = Residual_Block(256, net['res6_2'], name='res6_7') 
+    net['res6_8'] = Residual_Block(256, net['res6_3'], name='res6_8')
+    net['conv6_9'] = Convolution2D(1024, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv6_9')(net['res6_8'])
 
     # Block 6
-    net['res7_1'] = Residual_Block(512, net['conv6_5'], name='res7_1')
+    net['res7_1'] = Residual_Block(512, net['conv6_9'], name='res7_1')
     net['res7_2'] = Residual_Block(512, net['res7_1'], name='res7_2') # prediction from 7_2 layer 34
-    
+    net['res7_3'] = Residual_Block(512, net['res7_2'], name='res7_3')
+    net['res7_4'] = Residual_Block(512, net['res7_3'], name='res7_4') # prediction from 7_4 layer 34
+
     # Last pool
-    net['pool7_3'] = GlobalAveragePooling2D(name='pool7_3')(net['res7_2'])
+    net['pool7_5'] = GlobalAveragePooling2D(name='pool7_5')(net['res7_4'])
 
-    # Prediction from conv4_3
-    net['conv4_3_norm'] = Normalize(20)(net['conv4_3'])
+    # Prediction from conv5_9
+    net['conv5_9_norm'] = Normalize(20)(net['conv5_9'])
     num_priors = 3
-    net['conv4_3_norm_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['conv4_3_norm'])
-    net['conv4_3_norm_mbox_loc_flat'] = Flatten()(net['conv4_3_norm_mbox_loc'])
+    net['conv5_9_norm_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['conv5_9_norm'])
+    net['conv5_9_norm_mbox_loc_flat'] = Flatten()(net['conv5_9_norm_mbox_loc'])
     
-    net['conv4_3_norm_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['conv4_3_norm'])
-    net['conv4_3_norm_mbox_conf_flat'] = Flatten()(net['conv4_3_norm_mbox_conf'])
+    net['conv5_9_norm_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['conv5_9_norm'])
+    net['conv5_9_norm_mbox_conf_flat'] = Flatten()(net['conv5_9_norm_mbox_conf'])
 
-    net['conv4_3_norm_mbox_priorbox'] = PriorBox(image_size, min_size=scales[0], aspect_ratios=aspect_ratios_per_layer[0], variances=variances)(net['conv4_3_norm'])
+    net['conv5_9_norm_mbox_priorbox'] = PriorBox(image_size, min_size=scales[0], aspect_ratios=aspect_ratios_per_layer[0], variances=variances)(net['conv5_9_norm'])
     
-    # Prediction from conv5_5
+    # Prediction from res6_5
     num_priors = 6
-    net['conv5_5_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['conv5_5'])
-    net['conv5_5_mbox_loc_flat'] = Flatten()(net['conv5_5_mbox_loc'])
+    net['res6_5_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res6_5'])
+    net['res6_5_mbox_loc_flat'] = Flatten()(net['res6_5_mbox_loc'])
     
-    net['conv5_5_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['conv5_5'])
-    net['conv5_5_mbox_conf_flat'] = Flatten()(net['conv5_5_mbox_conf'])
+    net['res6_5_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res6_5'])
+    net['res6_5_mbox_conf_flat'] = Flatten()(net['res6_5_mbox_conf'])
 
-    net['conv5_5_mbox_priorbox'] = PriorBox(image_size, min_size=scales[1], max_size=scales[2], aspect_ratios=aspect_ratios_per_layer[1], variances=variances)(net['conv5_5'])
+    net['res6_5_mbox_priorbox'] = PriorBox(image_size, min_size=scales[1], max_size=scales[2], aspect_ratios=aspect_ratios_per_layer[1], variances=variances)(net['res6_5'])
 
-    # Prediction from conv6_3
+    # Prediction from conv6_9
     num_priors = 6
-    net['conv6_3_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res6_3'])
-    net['conv6_3_mbox_loc_flat'] = Flatten()(net['conv6_3_mbox_loc'])
+    net['conv6_9_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res6_3'])
+    net['conv6_9_mbox_loc_flat'] = Flatten()(net['conv6_9_mbox_loc'])
     
-    net['conv6_3_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res6_3'])
-    net['conv6_3_mbox_conf_flat'] = Flatten()(net['conv6_3_mbox_conf'])
+    net['conv6_9_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res6_3'])
+    net['conv6_9_mbox_conf_flat'] = Flatten()(net['conv6_9_mbox_conf'])
 
-    net['conv6_3_mbox_priorbox'] = PriorBox(image_size, min_size=scales[2], max_size=scales[3], aspect_ratios=aspect_ratios_per_layer[2], variances=variances)(net['res6_3'])
+    net['conv6_9_mbox_priorbox'] = PriorBox(image_size, min_size=scales[2], max_size=scales[3], aspect_ratios=aspect_ratios_per_layer[2], variances=variances)(net['res6_3'])
     
-    # Prediction from conv6_5
+    # Prediction from res7_2
     num_priors = 6
-    net['conv6_5_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['conv6_5'])
-    net['conv6_5_mbox_loc_flat'] = Flatten()(net['conv6_5_mbox_loc'])
+    net['res7_2_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res7_2'])
+    net['res7_2_mbox_loc_flat'] = Flatten()(net['res7_2_mbox_loc'])
     
-    net['conv6_5_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['conv6_5'])
-    net['conv6_5_mbox_conf_flat'] = Flatten()(net['conv6_5_mbox_conf'])
+    net['res7_2_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res7_2'])
+    net['res7_2_mbox_conf_flat'] = Flatten()(net['res7_2_mbox_conf'])
 
-    net['conv6_5_mbox_priorbox'] = PriorBox(image_size, min_size=scales[3], max_size=scales[4], aspect_ratios=aspect_ratios_per_layer[3], variances=variances)(net['conv6_5'])
+    net['res7_2_mbox_priorbox'] = PriorBox(image_size, min_size=scales[3], max_size=scales[4], aspect_ratios=aspect_ratios_per_layer[3], variances=variances)(net['res7_2'])
 
-    # Prediction from conv7_2
+    # Prediction from res7_4
     num_priors = 6
-    net['conv7_2_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res7_2'])
-    net['conv7_2_mbox_loc_flat'] = Flatten()(net['conv7_2_mbox_loc'])
+    net['res7_4_mbox_loc'] = Convolution2D(num_priors * 4, kernel_size=3, padding='same')(net['res7_4'])
+    net['res7_4_mbox_loc_flat'] = Flatten()(net['res7_4_mbox_loc'])
     
-    net['conv7_2_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res7_2'])
-    net['conv7_2_mbox_conf_flat'] = Flatten()(net['conv7_2_mbox_conf'])
+    net['res7_4_mbox_conf'] = Convolution2D(num_priors * num_classes, kernel_size=3, padding='same')(net['res7_4'])
+    net['res7_4_mbox_conf_flat'] = Flatten()(net['res7_4_mbox_conf'])
 
-    net['conv7_2_mbox_priorbox'] = PriorBox(image_size, min_size=scales[4], max_size=scales[5], aspect_ratios=aspect_ratios_per_layer[4], variances=variances)(net['res7_2'])
+    net['res7_4_mbox_priorbox'] = PriorBox(image_size, min_size=scales[4], max_size=scales[5], aspect_ratios=aspect_ratios_per_layer[4], variances=variances)(net['res7_4'])
     
-    # Prediction from pool7_3
+    # Prediction from pool7_5
     num_priors = 6
-    net['pool7_3_mbox_loc_flat'] = Dense(num_priors * 4)(net['pool7_3'])
+    net['pool7_5_mbox_loc_flat'] = Dense(num_priors * 4)(net['pool7_5'])
     
-    net['pool7_3_mbox_conf_flat'] = Dense(num_priors * num_classes)(net['pool7_3'])
+    net['pool7_5_mbox_conf_flat'] = Dense(num_priors * num_classes)(net['pool7_5'])
 
     if K.image_dim_ordering() == 'tf':
         target_shape = (1, 1, 1024)
     else:
         target_shape = (1024, 1, 1)
     
-    net['pool7_3_reshaped'] = Reshape(target_shape)(net['pool7_3'])
-    net['pool7_3_mbox_priorbox'] = PriorBox(image_size, min_size=scales[5], max_size=scales[6], aspect_ratios=aspect_ratios_per_layer[5], variances=variances)(net['pool7_3_reshaped'])
+    net['pool7_5_reshaped'] = Reshape(target_shape)(net['pool7_5'])
+    net['pool7_5_mbox_priorbox'] = PriorBox(image_size, min_size=scales[5], max_size=scales[6], aspect_ratios=aspect_ratios_per_layer[5], variances=variances)(net['pool7_5_reshaped'])
    
     # Combine predictions
     
     # We predict 4 box coordinates for each box, hence the localization predictors have depth `n_boxes * 4`
     # Output shape of the localization layers: `(batch, height, width, n_boxes * 4)`
-    net['mbox_loc'] = concatenate([net['conv4_3_norm_mbox_loc_flat'],
-                            net['conv5_5_mbox_loc_flat'],
-                            net['conv6_3_mbox_loc_flat'],
-                            net['conv6_5_mbox_loc_flat'],
-                            net['conv7_2_mbox_loc_flat'],
-                            net['pool7_3_mbox_loc_flat']
+    net['mbox_loc'] = concatenate([net['conv5_9_norm_mbox_loc_flat'],
+                            net['res6_5_mbox_loc_flat'],
+                            net['conv6_9_mbox_loc_flat'],
+                            net['res7_2_mbox_loc_flat'],
+                            net['res7_4_mbox_loc_flat'],
+                            net['pool7_5_mbox_loc_flat']
                             ], axis=1)
     
     # We precidt `n_classes` confidence values for each box, hence the confidence predictors have depth `n_boxes * n_classes`
     # Output shape of the confidence layers: `(batch, height, width, n_boxes * n_classes)`
-    net['mbox_conf'] = concatenate([net['conv4_3_norm_mbox_conf_flat'],
-                            net['conv5_5_mbox_conf_flat'],
-                            net['conv6_3_mbox_conf_flat'],
-                            net['conv6_5_mbox_conf_flat'],
-                            net['conv7_2_mbox_conf_flat'],
-                            net['pool7_3_mbox_conf_flat']
+    net['mbox_conf'] = concatenate([net['conv5_9_norm_mbox_conf_flat'],
+                            net['res6_5_mbox_conf_flat'],
+                            net['conv6_9_mbox_conf_flat'],
+                            net['res7_2_mbox_conf_flat'],
+                            net['res7_4_mbox_conf_flat'],
+                            net['pool7_5_mbox_conf_flat']
                             ], axis=1)
     
     # Output shape of anchors: `(batch, height, width, n_boxes, 8)`
-    net['mbox_prior'] = concatenate([net['conv4_3_norm_mbox_priorbox'],
-                            net['conv5_5_mbox_priorbox'],
-                            net['conv6_3_mbox_priorbox'],
-                            net['conv6_5_mbox_priorbox'],
-                            net['conv7_2_mbox_priorbox'],
-                            net['pool7_3_mbox_priorbox']
+    net['mbox_prior'] = concatenate([net['conv5_9_norm_mbox_priorbox'],
+                            net['res6_5_mbox_priorbox'],
+                            net['conv6_9_mbox_priorbox'],
+                            net['res7_2_mbox_priorbox'],
+                            net['res7_4_mbox_priorbox'],
+                            net['pool7_5_mbox_priorbox']
                             ], axis=1)
 
     # Calculating number of boxes to isolate it using Reshape
@@ -211,6 +221,6 @@ def SSD_300(
                             ], axis=2)
     model = Model(net['input'], net['predictions'])
 
-    # model = Model(net['input'], net['pool7_3']) # for debugging
+    # model = Model(net['input'], net['pool7_5']) # for debugging
 
     return model
