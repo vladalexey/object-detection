@@ -88,9 +88,9 @@ def SSD_300(
     net['res6_3'] = Residual_Block(256, net['res6_2'], name='res6_3') 
     net['res6_4'] = Residual_Block(256, net['res6_3'], name='res6_4') 
     net['res6_5'] = Residual_Block(256, net['res6_4'], name='res6_5') # prediction from 6_5 layer 26
-    net['res6_6'] = Residual_Block(256, net['res6_1'], name='res6_6') 
-    net['res6_7'] = Residual_Block(256, net['res6_2'], name='res6_7') 
-    net['res6_8'] = Residual_Block(256, net['res6_3'], name='res6_8')
+    net['res6_6'] = Residual_Block(256, net['res6_5'], name='res6_6') 
+    net['res6_7'] = Residual_Block(256, net['res6_6'], name='res6_7') 
+    net['res6_8'] = Residual_Block(256, net['res6_7'], name='res6_8')
     net['conv6_9'] = Convolution2D(1024, kernel_size=3, activation='relu', padding='valid', strides=2, name='conv6_9')(net['res6_8'])
 
     # Block 6
