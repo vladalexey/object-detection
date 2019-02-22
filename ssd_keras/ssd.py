@@ -21,7 +21,7 @@ from matplotlib import pyplot as plt
 sys.path.append(os.getcwd())
 
 NUM_CLASSES = 17 + 1   # classes + 1 for background (e.g. for PASCAL07 it is 20 + 1)
-BS = 64
+BS = 32
 NUM_EPOCH = 200
 input_shape = (300, 300, 3)
 BASE_LR = 3e-4
